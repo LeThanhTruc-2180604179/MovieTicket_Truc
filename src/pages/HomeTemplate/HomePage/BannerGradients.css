@@ -1,0 +1,45 @@
+/* Banner Gradient Styles */
+.banner-gradient-1 {
+  background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #3730a3 100%) !important;
+  background-size: 100% 100% !important;
+}
+
+.banner-gradient-2 {
+  background: linear-gradient(135deg, #7f1d1d 0%, #be185d 50%, #be123c 100%) !important;
+  background-size: 100% 100% !important;
+}
+
+.banner-gradient-3 {
+  background: linear-gradient(135deg, #14532d 0%, #047857 50%, #0f766e 100%) !important;
+  background-size: 100% 100% !important;
+}
+
+/* Fallback for older browsers */
+@supports not (background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #3730a3 100%)) {
+  .banner-gradient-1 {
+    background: #1e3a8a !important;
+  }
+  .banner-gradient-2 {
+    background: #7f1d1d !important;
+  }
+  .banner-gradient-3 {
+    background: #14532d !important;
+  }
+}
+
+/* Ensure gradient is visible */
+.banner-gradient-1,
+.banner-gradient-2,
+.banner-gradient-3 {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 1 !important;
+}
+
+/* Ensure banner section has proper background */
+.hero-banner {
+  background: transparent !important;
+} 
