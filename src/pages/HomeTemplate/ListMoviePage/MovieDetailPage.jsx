@@ -80,24 +80,33 @@ export default function MovieDetailPage() {
     });
   };
 
-  // Hàm lấy danh sách ngày có lịch chiếu
+  // Hàm lấy danh sách ngày từ hôm nay đến 7 ngày sau
   const getAvailableDates = () => {
-    if (!lichChieu || !lichChieu.heThongRapChieu) return [];
-    
-    const dates = new Set();
-    lichChieu.heThongRapChieu.forEach(heThong => {
-      heThong.cumRapChieu.forEach(cumRap => {
-        cumRap.lichChieuPhim.forEach(lich => {
-          const date = new Date(lich.ngayChieuGioChieu);
-          dates.add(date.toISOString().split('T')[0]);
-        });
-      });
-    });
-    
-    return Array.from(dates).sort();
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      days.push(date.toISOString().split('T')[0]);
+    }
+    return days;
   };
 
-  // Tự động chọn ngày đầu tiên khi có dữ liệu (chỉ chọn ngày không quá hạn)
+  // Hàm kiểm tra xem ngày có lịch chiếu hay không
+  const hasScheduleForDate = (targetDate) => {
+    if (!lichChieu || !lichChieu.heThongRapChieu) return false;
+    
+    return lichChieu.heThongRapChieu.some(heThong => 
+      heThong.cumRapChieu.some(cumRap => 
+        cumRap.lichChieuPhim.some(lich => {
+          const lichDate = new Date(lich.ngayChieuGioChieu);
+          const targetDateObj = new Date(targetDate);
+          return lichDate.toDateString() === targetDateObj.toDateString();
+        })
+      )
+    );
+  };
+
+  // Tự động chọn ngày đầu tiên khi có dữ liệu
   useEffect(() => {
     if (lichChieu && !selectedDate) {
       const availableDates = getAvailableDates();
@@ -114,7 +123,7 @@ export default function MovieDetailPage() {
         if (validDate) {
           setSelectedDate(validDate);
         } else {
-          // Nếu tất cả ngày đều quá hạn, chọn ngày đầu tiên (để hiển thị nhưng vô hiệu hóa)
+          // Nếu tất cả ngày đều quá hạn, chọn ngày đầu tiên
           setSelectedDate(availableDates[0]);
         }
       }
@@ -237,11 +246,10 @@ export default function MovieDetailPage() {
                         return (
                           <button
                             key={date}
-                            onClick={() => !isExpired && setSelectedDate(date)}
-                            disabled={isExpired}
+                            onClick={() => setSelectedDate(date)}
                             className={`px-4 py-2 rounded-lg border font-medium whitespace-nowrap transition-all text-sm flex flex-col items-center min-w-[80px] ${
                               isExpired
-                                ? 'bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                ? 'bg-gray-200 text-gray-400 border-gray-200 hover:bg-gray-100'
                                 : isSelected 
                                   ? 'bg-blue-500 text-white border-blue-500 shadow-md' 
                                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -255,9 +263,6 @@ export default function MovieDetailPage() {
                             </span>
                             {isToday && !isExpired && (
                               <span className="text-xs bg-green-500 text-white px-1 rounded mt-1">Hôm nay</span>
-                            )}
-                            {isExpired && (
-                              <span className="text-xs bg-gray-400 text-white px-1 rounded mt-1">Quá hạn</span>
                             )}
                           </button>
                         );
@@ -276,6 +281,8 @@ export default function MovieDetailPage() {
                     <div className="text-gray-400 italic py-4">Không có lịch chiếu cho phim này.</div>
                   ) : !selectedDate ? (
                     <div className="text-gray-400 italic py-4">Vui lòng chọn ngày chiếu.</div>
+                  ) : !hasScheduleForDate(selectedDate) ? (
+                    <div className="text-gray-400 italic py-4">Không có lịch chiếu cho ngày {selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : ''}.</div>
                   ) : (
                     <>
                      {/* Thanh chọn hệ thống rạp */}

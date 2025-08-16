@@ -239,16 +239,18 @@ export default function AboutPage() {
             : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="max-w-6xl mx-auto px-6">
+        {/* Overlay tối giúp chữ nổi bật hơn */}
+        <div className="absolute inset-0 bg-black/60 z-0"></div>
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center">
-            <h1 className={`text-4xl md:text-6xl font-bold mb-6 transition-all duration-1000 delay-300 ${
+            <h1 className={`text-4xl md:text-6xl font-bold mb-6 transition-all duration-1000 delay-300 drop-shadow-lg ${
               isVisible('hero-section') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'
             }`}>
               Về Chúng Tôi
             </h1>
-            <p className={`text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-500 ${
+            <p className={`text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-500 drop-shadow ${
               isVisible('hero-section') 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-10'

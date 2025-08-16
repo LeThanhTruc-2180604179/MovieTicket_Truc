@@ -12,3 +12,12 @@
   color: white !important;
   background-color: red !important;
 }
+
+/* Hide horizontal scrollbar for custom slider */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

@@ -140,7 +140,6 @@ export default function MyTicketsPage() {
   const [chartType, setChartType] = useState("bar"); // "bar" | "pie"
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [ticketFilter, setTicketFilter] = useState("all"); // "all" | "valid" | "expired"
 
   useEffect(() => {
     if (!user) {
@@ -178,14 +177,6 @@ export default function MyTicketsPage() {
     if (!profile?.thongTinDatVe) return [];
     let filtered = profile.thongTinDatVe;
     
-    // Lọc theo trạng thái hiệu lực
-    if (ticketFilter !== "all") {
-      filtered = filtered.filter(b => {
-        const isExpired = new Date(b.ngayDat) < new Date();
-        return ticketFilter === "valid" ? !isExpired : isExpired;
-      });
-    }
-    
     // Lọc theo tìm kiếm
     if (search.trim()) {
       const keyword = search.trim().toLowerCase();
@@ -195,7 +186,7 @@ export default function MyTicketsPage() {
       );
     }
     return filtered;
-  }, [profile, search, ticketFilter]);
+  }, [profile, search]);
   const totalPages = Math.ceil(bookings.length / PAGE_SIZE) || 1;
   const pagedBookings = bookings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -239,17 +230,6 @@ export default function MyTicketsPage() {
               <p className="text-sm text-gray-600 mt-1">Click vào vé để xem chi tiết và mã QR</p>
             </div>
             <div className="flex items-center gap-3">
-              {/* Bộ lọc trạng thái vé */}
-              <select
-                value={ticketFilter}
-                onChange={(e) => { setTicketFilter(e.target.value); setPage(1); }}
-                className="border border-neutral-300 px-3 py-2 rounded text-sm focus:border-yellow-500 focus:ring-yellow-500 bg-white"
-                style={{ color: "#111" }}
-              >
-                <option value="all">Tất cả vé</option>
-                <option value="valid">Còn hiệu lực</option>
-                <option value="expired">Đã hết hạn</option>
-              </select>
               <input
                 type="text"
                 placeholder="Tìm kiếm phim, ghế..."
@@ -265,7 +245,7 @@ export default function MyTicketsPage() {
               <thead>
                 <tr style={{ background: "#f5f5f5" }}>
                   <th className="px-3 py-2 text-left">Tên phim</th>
-                  <th className="px-3 py-2 text-left">Ngày đặt</th>
+                  <th className="px-3 py-2 text-left">Ngày chiếu</th>
                   <th className="px-3 py-2 text-left">Ghế</th>
                   <th className="px-3 py-2 text-left">Tổng giá</th>
                 </tr>
@@ -273,41 +253,29 @@ export default function MyTicketsPage() {
               <tbody>
                 {pagedBookings.length === 0 ? (
                   <tr><td colSpan={4} className="text-center py-6 text-neutral-400">Không có vé nào</td></tr>
-                ) : pagedBookings.map((b, idx) => {
-                  // Kiểm tra xem vé có hết hạn hay không
-                  const isExpired = new Date(b.ngayDat) < new Date();
-                  
-                  return (
-                    <tr 
-                      key={idx} 
-                      className={`border-t border-neutral-100 transition ${
-                        isExpired 
-                          ? 'bg-gray-100 opacity-60 cursor-not-allowed' 
-                          : 'hover:bg-neutral-50 cursor-pointer'
-                      }`}
-                      onClick={() => !isExpired && handleOpenTicketModal(b)}
-                    >
-                      <td className="px-3 py-2 font-semibold text-black">
-                        {b.tenPhim}
-                        {isExpired && (
-                          <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                            Hết hạn
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-gray-600">
-                        {new Date(b.ngayDat).toLocaleString("vi-VN")}
-                      </td>
-                      <td className="px-3 py-2 text-black">{b.danhSachGhe?.map(g => g.tenGhe).join(", ")}</td>
-                      <td className="px-3 py-2 text-black">
-                        {b.giaVe && b.danhSachGhe 
-                          ? (b.giaVe * b.danhSachGhe.length).toLocaleString() + " đ" 
-                          : "-"
-                        }
-                      </td>
-                    </tr>
-                  );
-                })}
+                ) : pagedBookings.map((b, idx) => (
+                  <tr 
+                    key={idx} 
+                    className="border-t border-neutral-100 transition hover:bg-neutral-50 cursor-pointer"
+                    onClick={() => handleOpenTicketModal(b)}
+                  >
+                    <td className="px-3 py-2 font-semibold text-black">
+                      {b.tenPhim}
+                    </td>
+                    <td className="px-3 py-2 text-gray-600">
+                      {b.danhSachGhe && b.danhSachGhe[0]?.ngayChieuGioChieu
+                        ? new Date(b.danhSachGhe[0].ngayChieuGioChieu).toLocaleString("vi-VN")
+                        : new Date(b.ngayDat).toLocaleString("vi-VN")}
+                    </td>
+                    <td className="px-3 py-2 text-black">{b.danhSachGhe?.map(g => g.tenGhe).join(", ")}</td>
+                    <td className="px-3 py-2 text-black">
+                      {b.giaVe && b.danhSachGhe 
+                        ? (b.giaVe * b.danhSachGhe.length).toLocaleString() + " đ" 
+                        : "-"
+                      }
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -322,21 +290,21 @@ export default function MyTicketsPage() {
         </div>
         {/* Right: Thống kê dạng biểu đồ */}
         <div className="w-full md:w-[380px] bg-white rounded-xl shadow-lg p-6 border border-neutral-200 flex flex-col gap-6">
-          {/* Thống kê trạng thái vé */}
+          {/* Thống kê tổng quan */}
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-3">Trạng thái vé</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">Thống kê tổng quan</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {profile?.thongTinDatVe?.filter(b => new Date(b.ngayDat) >= new Date()).length || 0}
+                <div className="text-2xl font-bold text-blue-600">
+                  {profile?.thongTinDatVe?.length || 0}
                 </div>
-                <div className="text-sm text-gray-600">Còn hiệu lực</div>
+                <div className="text-sm text-gray-600">Tổng số vé</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {profile?.thongTinDatVe?.filter(b => new Date(b.ngayDat) < new Date()).length || 0}
+                <div className="text-2xl font-bold text-green-600">
+                  {profile?.thongTinDatVe?.reduce((sum, b) => sum + (b.danhSachGhe?.length || 0), 0) || 0}
                 </div>
-                <div className="text-sm text-gray-600">Đã hết hạn</div>
+                <div className="text-sm text-gray-600">Tổng số ghế</div>
               </div>
             </div>
           </div>
